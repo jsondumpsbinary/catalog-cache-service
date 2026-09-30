@@ -7,15 +7,37 @@ const pathToFile = path.join(__dirname,"db.json")
 
 
 async function readFile(){
-    let data = await fs.readFile(pathToFile,'utf-8')
-    return JSON.parse(data)
+    try{
+        let data = await fs.readFile(pathToFile,'utf-8')
+        return JSON.parse(data)
+    }
+    catch(err){
+        console.log(err)
+    }
 
 }
 
 app.get('/products', async (req, res) => {
-    let products = await readFile()
-    console.log(products)
-    res.send(products)
+    try{
+        let products = await readFile()
+        console.log(products)
+        res.send(products)
+    }
+    catch(err){
+        console.log(err)
+    }
+});
+
+app.get('/products/:id', async (req, res) => {
+    try{
+        let products = await readFile()
+        let {id} = req.params
+        console.log(products,typeof id)
+        res.send(products)
+    }
+    catch(err){
+        console.log(err)
+    }
 });
 
 app.listen(port, () => {

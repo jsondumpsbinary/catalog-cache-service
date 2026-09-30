@@ -43,6 +43,14 @@ app.get('/products/:id', async (req, res) => {
     }
 });
 
+async function readFileWithDelay(){
+    await new Promise((resolve,reject)=>{
+        setTimeout(resolve,1500)
+    })
+    let products = await readFile()
+    return products
+}
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });

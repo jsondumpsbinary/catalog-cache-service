@@ -32,8 +32,11 @@ app.get('/products/:id', async (req, res) => {
     try{
         let products = await readFile()
         let {id} = req.params
-        console.log(products,typeof id)
-        res.send(products)
+        id = Number(id)
+        let product = products.find((item)=>{
+            return item.id === id
+        })
+        res.json(product)
     }
     catch(err){
         console.log(err)

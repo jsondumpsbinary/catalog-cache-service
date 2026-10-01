@@ -5,6 +5,7 @@ async function checkCache(req,res,next){
     let value = cache[key];
     if(value){
         console.log(`[CACHE HIT] Serving from cache for: ${key}`);
+        res.set('X-Cache','HIT');
         return res.json(value);
     }
 

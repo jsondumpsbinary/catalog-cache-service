@@ -1,17 +1,16 @@
 const productService = require('../services/productService');
-
-const cache = {};
+const {cache} = require('../middleware/cacheMiddleware');
 
 async function getProducts(req,res){
     try{
-        let key = req.url;
-        let value = cache[key];
-        if(value){
-            return res.json(value);
-        }
+        let key = req.originalUrl;
         let products = await productService.getAllProducts();
-        cache[key] = products;
-        return res.json(products)
+        cache[key] = {
+            value : products,
+            createdAt : Date.now()
+        };
+        res.set('X-Cache','MISS');
+        return res.json(products);
     }
     catch(err){
         console.log(err);
@@ -21,18 +20,17 @@ async function getProducts(req,res){
 
 async function getProductById(req,res){
     try{
-        let key = req.url;
-        let value = cache[key];
-        if(value){
-            return res.json(value);
-        }
-
-        let {id} = req.params
-        let product = await productService.getProductById(Number(id))
+        let key = req.originalUrl;
+        let {id} = req.params;
+        let product = await productService.getProductById(Number(id));
+        res.set('X-Cache','MISS');
         if(!product){
             return res.status(404).json({ error: "Product not found" });
         }
-        cache[key] = product;
+        cache[key] = {
+            value: product,
+            createdAt: Date.now()
+        };
         return res.json(product);
     }
     catch(err){

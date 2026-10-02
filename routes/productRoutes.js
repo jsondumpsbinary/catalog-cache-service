@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get('/', checkCache, productController.getProducts);
 router.get('/:id',checkCache, productController.getProductById);
-// Register POST /products (No checkCache middleware here because POST is a mutation!)
+
+// (No checkCache middleware here because POST,PUT,DELETE,PATCH is a mutation!)
 router.post('/', productController.createProduct);
 router.put('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);

@@ -1,6 +1,6 @@
 # Product API
 
-A small Express.js API that reads products from `db.json`. It uses separate route, controller, service, database, and middleware layers.
+An Express.js REST API for managing products stored in the local `db.json` file. The application separates routing, request handling, business logic, database access, caching, and error handling.
 
 ## Setup
 
@@ -11,91 +11,163 @@ npm install
 npm run server
 ```
 
-The server runs at `http://localhost:3000`. To start it without Nodemon, use:
+The server runs at `http://localhost:3000`. To run without Nodemon:
 
 ```bash
 npm start
 ```
 
-## Endpoints
+## API
 
-### Get all products
+All endpoints use JSON. Send `Content-Type: application/json` with requests that contain a body.
+
+### Read products
 
 ```http
 GET /products
-```
-
-```bash
-curl -i http://localhost:3000/products
-```
-
-### Get one product
-
-```http
 GET /products/:id
 ```
 
+Example:
+
 ```bash
-curl -i http://localhost:3000/products/1
+curl -i http://localhost:3000/products/2
 ```
 
-Successful response:
+A successful product response is:
 
 ```json
 {
-  "id": 1,
+  "id": 2,
+  "name": "Mouse",
+  "price": 49.99
+}
+```
+
+### Create a product
+
+```http
+POST /products
+```
+
+Request body:
+
+```json
+{
   "name": "Keyboard",
   "price": 49.99
 }
 ```
 
-If the product does not exist, the API returns `404`:
+Returns `201 Created`. The API assigns the next available numeric ID.
+
+### Replace a product
+
+```http
+PUT /products/:id
+```
+
+The request may include `name` and `price`. Fields that are not provided keep their current values.
+
+```json
+{
+  "name": "RGB Mechanical Keyboard",
+  "price": 89.99
+}
+```
+
+### Partially update a product
+
+```http
+PATCH /products/:id
+```
+
+Only the fields included in the request body are changed.
+
+```json
+{
+  "price": 79.99
+}
+```
+
+### Delete a product
+
+```http
+DELETE /products/:id
+```
+
+Returns a confirmation message and the deleted product.
+
+### Errors
+
+- `400`: required create fields are missing.
+- `404`: the requested product does not exist.
+- `500`: an unexpected application or database error occurred.
+
+Example `404` response:
 
 ```json
 { "error": "Product not found" }
 ```
 
-Unexpected errors return `500`:
+## Cache and request flow
 
-```json
-{ "error": "Internal Server Error" }
-```
+Only `GET /products` and `GET /products/:id` use the cache.
 
-## Caching
+1. The request enters the matching route in `routes/productRoutes.js`.
+2. `cacheMiddleware` checks the request URL.
+3. A valid entry returns immediately with `X-Cache: HIT`.
+4. On a miss, the controller calls the product service and returns `X-Cache: MISS`.
+5. The service reads `db.json` through `database/db.js`.
+6. POST, PUT, PATCH, and DELETE write changes and clear all cached entries. The terminal logs `[CACHE INVALIDATED]`.
 
-Both endpoints use an in-memory cache with a 60-second lifetime.
-
-- `X-Cache: MISS` indicates that data was read from `db.json`.
-- `X-Cache: HIT` indicates that a cached entry was used.
-- The cache is cleared when the server restarts.
-- The first database read includes an intentional 1.5-second delay.
-
-## Data format
-
-Products are stored as an array in `db.json`:
-
-```json
-[
-  { "id": 1, "name": "Keyboard", "price": 49.99 }
-]
-```
-
-Each product has a numeric `id`, a string `name`, and a numeric `price`.
+Cache entries are stored in memory for 60 seconds and disappear when the server restarts. Database reads include an intentional 1.5-second delay so cache hits are easy to observe.
 
 ## Project structure
 
 ```text
-Server.js                    # Express application
-routes/productRoutes.js      # Product routes
+Server.js
+  Express setup, JSON parsing, route mounting, and server startup
+
+routes/productRoutes.js
+  Maps HTTP methods and paths to controller handlers
+
 controller/productController.js
-services/productService.js   # Product operations
-database/db.js               # Reads db.json
+  Validates requests, calls services, sets status codes, and builds responses
+
+services/productService.js
+  Product lookup, creation, update, patch, and deletion operations
+
+database/db.js
+  Reads and writes db.json
+
 middleware/cacheMiddleware.js
-db.json                      # Product data
+  60-second in-memory cache and cache invalidation
+
+middleware/errorMiddleware.js
+  Centralized unexpected-error responses
+
+db.json
+  Local product data
 ```
 
-## Troubleshooting
+## Product data
 
-- Run commands from the project root, where `package.json` is located.
-- If port `3000` is busy, stop the other process or change the port in `Server.js`.
-- The project currently has no automated tests. `npm test` is a placeholder script.
+Products are stored as a JSON array. Each product has a numeric `id`, a string `name`, and a numeric `price`.
+
+```json
+[
+  { "id": 2, "name": "Mouse", "price": 49.99 }
+]
+```
+
+Changes made through POST, PUT, PATCH, or DELETE are written directly to `db.json`.
+
+## Testing manually
+
+1. Start the server with `npm run server`.
+2. Send the same GET request twice and check `X-Cache: MISS`, then `X-Cache: HIT`.
+3. Update or delete that product.
+4. Repeat the GET and confirm it returns `MISS` with the new data or `404` after deletion.
+
+The project does not currently contain automated tests; `npm test` is still a placeholder script.

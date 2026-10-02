@@ -39,8 +39,6 @@ async function getProductById(req,res){
     }
 }
 
-
-
 async function createProduct(req, res) {
     try {
         const { name, price } = req.body;
@@ -63,8 +61,51 @@ async function createProduct(req, res) {
     }
 }
 
+async function updateProduct(req, res) {
+    try {
+        const { id } = req.params;
+        const { name, price } = req.body;
+
+        const updated = await productService.updateProduct(Number(id), { name, price });
+        
+        if (!updated) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        // CACHE INVALIDATION: Purge stale product listings & item caches
+        clearCache();
+
+        res.json(updated);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+async function deleteProduct(req, res) {
+    try {
+        const { id } = req.params;
+
+        const deleted = await productService.deleteProduct(Number(id));
+        
+        if (!deleted) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        // CACHE INVALIDATION: Purge stale cache entries
+        clearCache();
+
+        res.json({ message: "Product deleted successfully", product: deleted });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 module.exports = {
     getProducts,
     getProductById,
-    createProduct
-}
+    createProduct,
+    updateProduct,
+    deleteProduct
+};

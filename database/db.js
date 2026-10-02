@@ -23,7 +23,7 @@ async function readFileWithDelay() {
 
 async function writeFile(data) {
     try {
-        await fs.writeFile(pathToFile, JSON.stringify(data, null, 2), 'utf-8');
+        await fs.writeFile(pathToDB, JSON.stringify(data, null, 2), 'utf-8');
     } catch (err) {
         console.log(err);
     }

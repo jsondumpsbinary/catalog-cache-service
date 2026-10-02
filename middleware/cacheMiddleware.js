@@ -9,7 +9,7 @@ async function checkCache(req,res,next){
         if(timeElapsed<ttlInMs){
             console.log(`[CACHE HIT] Serving from cache for: ${key}`);
             res.set('X-Cache','HIT');
-            return res.json(value);
+            return res.json(value.value);
         }
         else {
             console.log(`[CACHE EXPIRED] Entry for ${key} is older than 1 minute. Evicting...`);

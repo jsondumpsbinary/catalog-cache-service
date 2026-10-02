@@ -21,7 +21,15 @@ async function readFileWithDelay() {
     return products;
 }
 
+async function writeFile(data) {
+    try {
+        await fs.writeFile(pathToFile, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err) {
+        console.log(err);
+    }
+}
 // We must export this so Server.js can use it
 module.exports = {
-    readFileWithDelay
+    readFileWithDelay,
+    writeFile
 };

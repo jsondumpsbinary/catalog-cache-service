@@ -21,7 +21,16 @@ async function checkCache(req,res,next){
     next();
 }
 
+function clearCache() {
+    console.log('[CACHE INVALIDATED] Wiping all cache entries due to data mutation!');
+    // Delete every key in the cache object
+    for (let key in cache) {
+        delete cache[key];
+    }
+}
+
 module.exports = {
     cache,
-    checkCache
+    checkCache,
+    clearCache
 }

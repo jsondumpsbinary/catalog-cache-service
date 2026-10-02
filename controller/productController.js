@@ -1,5 +1,5 @@
 const productService = require('../services/productService');
-const {cache} = require('../middleware/cacheMiddleware');
+const {cache,clearCache} = require('../middleware/cacheMiddleware');
 
 async function getProducts(req,res){
     try{
@@ -39,7 +39,32 @@ async function getProductById(req,res){
     }
 }
 
+
+
+async function createProduct(req, res) {
+    try {
+        const { name, price } = req.body;
+        
+        // Basic validation
+        if (!name || !price) {
+            return res.status(400).json({ error: "Name and price are required" });
+        }
+        
+        const newProduct = await productService.createProduct({ name, price: Number(price) });
+        
+        // CACHE INVALIDATION: Data changed, wipe stale cache!
+        clearCache();
+        
+        // Return 201 Created status
+        res.status(201).json(newProduct);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 module.exports = {
     getProducts,
-    getProductById
+    getProductById,
+    createProduct
 }

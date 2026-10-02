@@ -1,4 +1,4 @@
-const {readFileWithDelay} = require('../database/db');
+const {readFileWithDelay,writeFile} = require('../database/db');
 
 async function getAllProducts(){
     const products = await readFileWithDelay();
@@ -15,7 +15,27 @@ async function getProductById(id){
     return product;
 }
 
+// Service function to add a new product
+async function createProduct(productData) {
+    const products = await readFileWithDelay();
+    
+    // Auto-generate a new ID (highest existing ID + 1)
+    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    
+    const newProduct = {
+        id: newId,
+        name: productData.name,
+        price: productData.price
+    };
+    
+    products.push(newProduct);
+    await writeFile(products);
+    
+    return newProduct;
+}
+
 module.exports = {
     getAllProducts,
-    getProductById
+    getProductById,
+    createProduct
 }

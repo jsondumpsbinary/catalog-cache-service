@@ -68,10 +68,27 @@ async function deleteProduct(id) {
     return deletedItem;
 }
 
+async function patchProduct(id, partialData) {
+    const products = await readFileWithDelay();
+    const index = products.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+
+    // Selectively update only the fields provided in body
+    products[index] = {
+        ...products[index],
+        ...(partialData.name !== undefined && { name: partialData.name }),
+        ...(partialData.price !== undefined && { price: Number(partialData.price) })
+    };
+
+    await writeFile(products);
+    return products[index];
+}
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    patchProduct
 };

@@ -126,29 +126,58 @@ Cache entries are stored in memory for 60 seconds and disappear when the server 
 ## Project structure
 
 ```text
+.
+|-- Server.js
+|   `-- Express setup, JSON parsing, route mounting, and startup
+|-- routes/
+|   `-- productRoutes.js
+|       `-- Maps product URLs to controller handlers
+|-- controller/
+|   `-- productController.js
+|       `-- Handles requests, responses, validation, and status codes
+|-- services/
+|   `-- productService.js
+|       `-- Contains product lookup and mutation operations
+|-- database/
+|   `-- db.js
+|       `-- Reads and writes db.json
+|-- middleware/
+|   |-- cacheMiddleware.js
+|   |   `-- 60-second cache and cache invalidation
+|   `-- errorMiddleware.js
+|       `-- Centralized unexpected-error responses
+|-- db.json
+|   `-- Local product data
+|-- package.json
+|   `-- Scripts and project dependencies
+`-- package-lock.json
+    `-- Locked dependency versions
+```
+
+### Request flow
+
+```text
+Client
+  |
+  v
 Server.js
-  Express setup, JSON parsing, route mounting, and server startup
-
+  |
+  v
 routes/productRoutes.js
-  Maps HTTP methods and paths to controller handlers
-
-controller/productController.js
-  Validates requests, calls services, sets status codes, and builds responses
-
-services/productService.js
-  Product lookup, creation, update, patch, and deletion operations
-
-database/db.js
-  Reads and writes db.json
-
-middleware/cacheMiddleware.js
-  60-second in-memory cache and cache invalidation
-
-middleware/errorMiddleware.js
-  Centralized unexpected-error responses
-
-db.json
-  Local product data
+  |
+  +--> cacheMiddleware.js  (GET requests)
+  |
+  v
+productController.js
+  |
+  v
+productService.js
+  |
+  v
+database/db.js <--> db.json
+  |
+  v
+errorMiddleware.js  (unexpected errors)
 ```
 
 ## Product data
